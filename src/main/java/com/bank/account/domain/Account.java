@@ -38,8 +38,4 @@ public class Account {
     private List<String> authorizedSigners;
 
     private Boolean active;
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
 }

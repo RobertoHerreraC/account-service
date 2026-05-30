@@ -8,100 +8,63 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.UUID;
 
 @Component
 public class AccountMapper {
 
-    /**
-     * Maps request DTO to domain entity.
-     *
-     * @param request account request
-     * @return account entity
-     */
     public Account toEntity(AccountRequest request) {
-
         return Account.builder()
                 .customerId(request.getCustomerId())
+                .accountNumber(generateAccountNumber())
                 .accountType(AccountType.valueOf(request.getAccountType()))
-                .maintenanceFee(
-                        request.getMaintenanceFee() == null
-                                ? BigDecimal.ZERO
-                                : BigDecimal.valueOf(request.getMaintenanceFee())
-                )
+                .balance(BigDecimal.ZERO)
+                .maintenanceFee(toBigDecimal(request.getMaintenanceFee()))
                 .monthlyMovementLimit(request.getMonthlyMovementLimit())
                 .allowedMovementDay(request.getAllowedMovementDay())
-                .holders(request.getHolders())
-                .authorizedSigners(request.getAuthorizedSigners())
-                .balance(BigDecimal.ZERO)
+                .holders(defaultList(request.getHolders()))
+                .authorizedSigners(defaultList(request.getAuthorizedSigners()))
                 .active(Boolean.TRUE)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
     }
 
-    /**
-     * Maps domain entity to response DTO.
-     *
-     * @param account account entity
-     * @return account response
-     */
     public AccountResponse toResponse(Account account) {
-
         AccountResponse response = new AccountResponse();
-
         response.setId(account.getId());
         response.setCustomerId(account.getCustomerId());
         response.setAccountNumber(account.getAccountNumber());
         response.setAccountType(account.getAccountType().name());
-
-        response.setBalance(
-                account.getBalance() == null
-                        ? 0.0
-                        : account.getBalance().doubleValue()
-        );
-
-        response.setMaintenanceFee(
-                account.getMaintenanceFee() == null
-                        ? 0.0
-                        : account.getMaintenanceFee().doubleValue()
-        );
-
+        response.setBalance(account.getBalance().doubleValue());
+        response.setMaintenanceFee(account.getMaintenanceFee().doubleValue());
         response.setMonthlyMovementLimit(account.getMonthlyMovementLimit());
         response.setAllowedMovementDay(account.getAllowedMovementDay());
         response.setHolders(account.getHolders());
         response.setAuthorizedSigners(account.getAuthorizedSigners());
         response.setActive(account.getActive());
-
         return response;
     }
 
-    /**
-     * Updates an existing account entity.
-     *
-     * @param account existing account
-     * @param request request data
-     * @return updated account
-     */
-    public Account updateEntity(
-            Account account,
-            AccountRequest request) {
-
+    public Account updateEntity(Account account, AccountRequest request) {
         account.setCustomerId(request.getCustomerId());
         account.setAccountType(AccountType.valueOf(request.getAccountType()));
-
-        account.setMaintenanceFee(
-                request.getMaintenanceFee() == null
-                        ? BigDecimal.ZERO
-                        : BigDecimal.valueOf(request.getMaintenanceFee())
-        );
-
+        account.setMaintenanceFee(toBigDecimal(request.getMaintenanceFee()));
         account.setMonthlyMovementLimit(request.getMonthlyMovementLimit());
         account.setAllowedMovementDay(request.getAllowedMovementDay());
-        account.setHolders(request.getHolders());
-        account.setAuthorizedSigners(request.getAuthorizedSigners());
-
-        account.setUpdatedAt(LocalDateTime.now());
-
+        account.setHolders(defaultList(request.getHolders()));
+        account.setAuthorizedSigners(defaultList(request.getAuthorizedSigners()));
         return account;
+    }
+
+    private BigDecimal toBigDecimal(Double value) {
+        return value == null ? BigDecimal.ZERO : BigDecimal.valueOf(value);
+    }
+
+    private java.util.List<String> defaultList(java.util.List<String> values) {
+        return values == null ? Collections.emptyList() : values;
+    }
+
+    private String generateAccountNumber() {
+        return "ACC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }
