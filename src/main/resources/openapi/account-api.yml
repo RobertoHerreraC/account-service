@@ -1,0 +1,250 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  version: 1.0.0
+  description: API para la gestión de cuentas bancarias.
+
+servers:
+  - url: http://localhost:8082
+    description: Local account-service
+
+tags:
+  - name: Accounts
+    description: Operaciones de gestión de cuentas bancarias
+
+paths:
+  /api/v1/accounts:
+    post:
+      tags:
+        - Accounts
+      summary: Create account
+      operationId: createAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Business rule conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Accounts
+      summary: Find all accounts
+      operationId: findAllAccounts
+      responses:
+        '200':
+          description: Accounts found successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountResponse'
+
+  /api/v1/accounts/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: Find account by id
+      operationId: findAccountById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Account unique identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Accounts
+      summary: Update account
+      operationId: updateAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Account unique identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+      responses:
+        '200':
+          description: Account updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Business rule conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Accounts
+      summary: Delete account
+      operationId: deleteAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Account unique identifier
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Account deleted successfully
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    AccountRequest:
+      type: object
+      required:
+        - customerId
+        - accountType
+      properties:
+        customerId:
+          type: string
+          example: "665f1a2b9c1d4e001234abcd"
+        accountType:
+          type: string
+          example: "SAVINGS"
+          description: "Allowed values: SAVINGS, CHECKING, FIXED_TERM"
+        maintenanceFee:
+          type: number
+          format: double
+          example: 0.00
+        monthlyMovementLimit:
+          type: integer
+          example: 10
+        allowedMovementDay:
+          type: integer
+          example: 15
+        holders:
+          type: array
+          items:
+            type: string
+          example:
+            - "665f1a2b9c1d4e001234abcd"
+        authorizedSigners:
+          type: array
+          items:
+            type: string
+          example:
+            - "665f1a2b9c1d4e001234abce"
+
+    AccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "775f1a2b9c1d4e001234abcd"
+        customerId:
+          type: string
+          example: "665f1a2b9c1d4e001234abcd"
+        accountNumber:
+          type: string
+          example: "ACC-000001"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        balance:
+          type: number
+          format: double
+          example: 1000.00
+        maintenanceFee:
+          type: number
+          format: double
+          example: 0.00
+        monthlyMovementLimit:
+          type: integer
+          example: 10
+        allowedMovementDay:
+          type: integer
+          example: 15
+        holders:
+          type: array
+          items:
+            type: string
+        authorizedSigners:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "ACCOUNT_NOT_FOUND"
+        message:
+          type: string
+          example: "Account not found"
+        path:
+          type: string
+          example: "/api/v1/accounts/775f1a2b9c1d4e001234abcd"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-05-29T12:30:00"
