@@ -13,15 +13,17 @@ Tipos de cuenta soportados:
 * Java 17
 * Spring Boot
 * Spring WebFlux
-* RxJava
+* RxJava 3
 * Spring Data Reactive MongoDB
 * MongoDB
 * Spring Cloud Config Client
 * WebClient
-* Maven
+* OpenAPI Generator
 * Lombok
-* OpenAPI
 * Logback
+* Maven
+
+---
 
 ## Puerto
 
@@ -29,11 +31,13 @@ Tipos de cuenta soportados:
 8082
 ```
 
+---
+
 ## Configuración externa
 
 Este microservicio obtiene su configuración desde `config-server`.
 
-Archivo local mínimo:
+### application.yml
 
 ```yaml
 spring:
@@ -44,7 +48,13 @@ spring:
     import: optional:configserver:http://localhost:8888
 ```
 
-Configuración en Config Server:
+### Config Server
+
+Archivo:
+
+```text
+account-service.yml
+```
 
 ```yaml
 server:
@@ -64,15 +74,26 @@ logging:
     com.bank.account: DEBUG
 ```
 
-## Levantar servicios requeridos
+---
 
-Desde el proyecto donde está el `docker-compose.yml`:
+## Dependencias externas
 
-```bash
-docker compose up -d
+Este microservicio consume:
+
+```text
+customer-service
 ```
 
-Orden recomendado:
+Para validar:
+
+```text
+• Existencia del cliente
+• Tipo de cliente: PERSONAL o BUSINESS
+```
+
+---
+
+## Orden de levantamiento
 
 ```text
 1. MongoDB
@@ -81,11 +102,7 @@ Orden recomendado:
 4. account-service
 ```
 
-## Ejecutar account-service
-
-```bash
-mvn clean spring-boot:run
-```
+---
 
 ## Verificar Config Server
 
@@ -93,45 +110,19 @@ mvn clean spring-boot:run
 GET http://localhost:8888/account-service/default
 ```
 
-## Dependencia con customer-service
+---
 
-`account-service` consume `customer-service` mediante `WebClient` para validar:
- -d
+## Ejecutar aplicación
 
-URL configurada:
-
-```yaml
-customer-service:
-  base-url: http://localhost:8081
+```bash
+mvn clean spring-boot:run
 ```
 
-## Endpoints principales
+---
 
-```http
-POST   http://localhost:8082/api/v1/accounts
-GET    http://localhost:8082/api/v1/accounts
-GET    http://localhost:8082/api/v1/accounts/{id}
-PUT    http://localhost:8082/api/v1/accounts/{id}
-DELETE http://localhost:8082/api/v1/accounts/{id}
-```
+## Generación OpenAPI
 
-## Ejemplo POST
-
-```json
-{
-  "customerId": "665f1a2b9c1d4e001234abcd",
-  "accountType": "SAVINGS",
-  "maintenanceFee": 0.00,
-  "monthlyMovementLimit": 10,
-  "allowedMovementDay": null,
-  "holders": [],
-  "authorizedSigners": []
-}
-```
-
-## OpenAPI
-
-Contrato ubicado en:
+Contrato:
 
 ```text
 src/main/resources/openapi/account-api.yml
@@ -143,31 +134,86 @@ Generar código:
 mvn clean generate-sources
 ```
 
-## Reglas de negocio iniciales
+---
+
+## Modelo de dominio
+
+### AccountType
 
 ```text
-PERSONAL:
-- Puede tener una cuenta SAVINGS.
-- Puede tener una cuenta CHECKING.
-- Puede tener cuentas FIXED_TERM.
-
-BUSINESS:
-- No puede tener SAVINGS.
-- No puede tener FIXED_TERM.
-- Puede tener múltiples CHECKING.
-- Las cuentas empresariales deben tener uno o más titulares.
+SAVINGS
+CHECKING
+FIXED_TERM
 ```
+
+---
+
+## Reglas de negocio implementadas
+
+### Cliente PERSONAL
+
+```text
+• Puede tener cuenta SAVINGS.
+• Puede tener cuenta CHECKING.
+• Puede tener cuenta FIXED_TERM.
+• Solo puede tener una cuenta SAVINGS activa.
+• Solo puede tener una cuenta CHECKING activa.
+```
+
+### Cliente BUSINESS
+
+```text
+• No puede tener cuenta SAVINGS.
+• No puede tener cuenta FIXED_TERM.
+• Puede tener múltiples cuentas CHECKING.
+• Debe tener uno o más titulares.
+• Puede tener cero o más firmantes autorizados.
+```
+
+### Operaciones
+
+```text
+• El depósito debe ser mayor a cero.
+• El retiro debe ser mayor a cero.
+• El retiro no puede superar el saldo disponible.
+• Se utiliza borrado lógico con active=false.
+```
+
+---
+
+## Endpoints
+
+### CRUD
+
+```http
+POST   /api/v1/accounts
+GET    /api/v1/accounts
+GET    /api/v1/accounts/{id}
+PUT    /api/v1/accounts/{id}
+DELETE /api/v1/accounts/{id}
+```
+
+### Operaciones de cuenta
+
+```http
+POST   /api/v1/accounts/{id}/deposits
+POST   /api/v1/accounts/{id}/withdrawals
+GET    /api/v1/accounts/{id}/balance
+GET    /api/v1/accounts/customer/{customerId}
+```
+
+---
 
 ## Logs
 
-Los logs se visualizan en consola al ejecutar el servicio.
-
-Ejemplo:
+Ejemplos:
 
 ```text
-INFO  Creating account for customer id: ...
+INFO  Creating account for customerId: ...
 INFO  Customer validated successfully
-WARN  Business rule violated: ...
-ERROR Error creating account: ...
+INFO  Depositing money into account with id: ...
+INFO  Withdrawing money from account with id: ...
+INFO  Account balance found successfully
+WARN  Business rule violation
+ERROR Unexpected error
 ```
-
