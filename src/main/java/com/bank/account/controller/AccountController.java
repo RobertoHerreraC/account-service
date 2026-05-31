@@ -156,4 +156,15 @@ public class AccountController implements AccountsApi {
                 )
                 .map(ResponseEntity::ok);
     }
+
+    @Override
+    public Mono<ResponseEntity<Flux<AccountResponse>>> findAccountsByCustomerId(
+            String customerId,
+            ServerWebExchange exchange) {
+        return Mono.just(
+                ResponseEntity.ok(
+                        Flux.from(accountService.findByCustomerId(customerId))
+                )
+        );
+    }
 }

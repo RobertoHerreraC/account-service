@@ -261,6 +261,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/accounts/customer/{customerId}:
+    get:
+      tags:
+        - Accounts
+      summary: Find accounts by customer id
+      operationId: findAccountsByCustomerId
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: Customer unique identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer accounts found successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountResponse'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     AccountRequest:

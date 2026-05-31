@@ -14,4 +14,5 @@ public interface AccountService {
     Single<AccountResponse> deposit(String id, AccountDepositRequest request);
     Single<AccountResponse> withdraw(String id, AccountWithdrawalRequest request);
     Single<AccountBalanceResponse> getBalance(String id);
+    Flowable<AccountResponse> findByCustomerId(String customerId);
 }

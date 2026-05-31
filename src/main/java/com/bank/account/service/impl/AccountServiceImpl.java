@@ -160,6 +160,20 @@ public class AccountServiceImpl implements AccountService {
                         log.info("Account balance found successfully for id: {}", id));
     }
 
+    @Override
+    public Flowable<AccountResponse> findByCustomerId(String customerId) {
+        log.info("Finding accounts by customer id: {}", customerId);
+
+        return Flowable.fromPublisher(
+                        customerClient.findCustomerById(customerId)
+                                .switchIfEmpty(Mono.error(new CustomerNotFoundException(customerId)))
+                                .thenMany(accountRepository.findByCustomerIdAndActiveTrue(customerId))
+                )
+                .map(accountMapper::toResponse)
+                .doOnComplete(() ->
+                        log.info("Accounts found successfully for customer id: {}", customerId));
+    }
+
     private Single<CustomerResponse> findCustomerOrFail(String customerId) {
         return Single.fromPublisher(
                 customerClient.findCustomerById(customerId)
