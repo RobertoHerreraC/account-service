@@ -1,9 +1,6 @@
 package com.bank.account.service.impl;
 
-import com.bank.account.api.dto.AccountDepositRequest;
-import com.bank.account.api.dto.AccountRequest;
-import com.bank.account.api.dto.AccountResponse;
-import com.bank.account.api.dto.AccountWithdrawalRequest;
+import com.bank.account.api.dto.*;
 import com.bank.account.client.CustomerClient;
 import com.bank.account.client.dto.CustomerResponse;
 import com.bank.account.domain.Account;
@@ -148,6 +145,19 @@ public class AccountServiceImpl implements AccountService {
                 .map(accountMapper::toResponse)
                 .doOnSuccess(response ->
                         log.info("Withdrawal registered successfully for account id: {}", id));
+    }
+
+    @Override
+    public Single<AccountBalanceResponse> getBalance(String id) {
+        log.info("Getting account balance for id: {}", id);
+
+        return Single.fromPublisher(
+                        accountRepository.findByIdAndActiveTrue(id)
+                                .switchIfEmpty(Mono.error(new AccountNotFoundException(id)))
+                )
+                .map(accountMapper::toBalanceResponse)
+                .doOnSuccess(response ->
+                        log.info("Account balance found successfully for id: {}", id));
     }
 
     private Single<CustomerResponse> findCustomerOrFail(String customerId) {

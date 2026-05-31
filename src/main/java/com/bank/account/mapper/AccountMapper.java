@@ -1,5 +1,6 @@
 package com.bank.account.mapper;
 
+import com.bank.account.api.dto.AccountBalanceResponse;
 import com.bank.account.api.dto.AccountRequest;
 import com.bank.account.api.dto.AccountResponse;
 import com.bank.account.domain.Account;
@@ -54,6 +55,16 @@ public class AccountMapper {
         account.setHolders(defaultList(request.getHolders()));
         account.setAuthorizedSigners(defaultList(request.getAuthorizedSigners()));
         return account;
+    }
+
+    public AccountBalanceResponse toBalanceResponse(Account account) {
+        AccountBalanceResponse response = new AccountBalanceResponse();
+
+        response.setAccountId(account.getId());
+        response.setAccountNumber(account.getAccountNumber());
+        response.setAccountType(account.getAccountType().name());
+        response.setBalance(account.getBalance().doubleValue());
+        return response;
     }
 
     private BigDecimal toBigDecimal(Double value) {

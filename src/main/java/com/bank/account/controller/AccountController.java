@@ -1,9 +1,6 @@
 package com.bank.account.controller;
 
-import com.bank.account.api.dto.AccountDepositRequest;
-import com.bank.account.api.dto.AccountRequest;
-import com.bank.account.api.dto.AccountResponse;
-import com.bank.account.api.dto.AccountWithdrawalRequest;
+import com.bank.account.api.dto.*;
 import com.bank.account.api.generated.AccountsApi;
 import com.bank.account.service.AccountService;
 import jakarta.validation.Valid;
@@ -145,6 +142,17 @@ public class AccountController implements AccountsApi {
                         Mono.fromCompletionStage(
                                 accountService.withdraw(id, request).toCompletionStage()
                         )
+                )
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<AccountBalanceResponse>> getAccountBalance(
+            String id,
+            ServerWebExchange exchange) {
+
+        return Mono.fromCompletionStage(
+                        accountService.getBalance(id).toCompletionStage()
                 )
                 .map(ResponseEntity::ok);
     }

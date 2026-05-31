@@ -235,6 +235,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/accounts/{id}/balance:
+    get:
+      tags:
+        - Accounts
+      summary: Obtener saldo de cuenta
+      operationId: getAccountBalance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account balance found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountBalanceResponse'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     AccountRequest:
@@ -333,6 +359,23 @@ components:
           type: number
           format: double
           example: 100.00
+
+    AccountBalanceResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: "775f1a2b9c1d4e001234abcd"
+        accountNumber:
+          type: string
+          example: "ACC-12345678"
+        accountType:
+          type: string
+          example: "SAVINGS"
+        balance:
+          type: number
+          format: double
+          example: 1200.00
 
     ErrorResponse:
       type: object
