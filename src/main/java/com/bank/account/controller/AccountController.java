@@ -1,5 +1,6 @@
 package com.bank.account.controller;
 
+import com.bank.account.api.dto.AccountDepositRequest;
 import com.bank.account.api.dto.AccountRequest;
 import com.bank.account.api.dto.AccountResponse;
 import com.bank.account.api.generated.AccountsApi;
@@ -115,5 +116,20 @@ public class AccountController implements AccountsApi {
                         accountService.delete(id).toCompletionStage(null)
                 )
                 .thenReturn(ResponseEntity.noContent().build());
+    }
+
+    @Override
+    public Mono<ResponseEntity<AccountResponse>> depositAccount(
+            String id,
+            Mono<AccountDepositRequest> accountDepositRequest,
+            ServerWebExchange exchange) {
+
+        return accountDepositRequest
+                .flatMap(request ->
+                        Mono.fromCompletionStage(
+                                accountService.deposit(id, request).toCompletionStage()
+                        )
+                )
+                .map(ResponseEntity::ok);
     }
 }

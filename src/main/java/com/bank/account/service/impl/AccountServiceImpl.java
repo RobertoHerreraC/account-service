@@ -1,5 +1,6 @@
 package com.bank.account.service.impl;
 
+import com.bank.account.api.dto.AccountDepositRequest;
 import com.bank.account.api.dto.AccountRequest;
 import com.bank.account.api.dto.AccountResponse;
 import com.bank.account.client.CustomerClient;
@@ -19,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
 
 @Slf4j
 @Service
@@ -107,6 +110,27 @@ public class AccountServiceImpl implements AccountService {
                         Single.fromPublisher(accountRepository.save(account))
                 )
                 .ignoreElement();
+    }
+
+    @Override
+    public Single<AccountResponse> deposit(String id, AccountDepositRequest request) {
+        log.info("Depositing money into account with id: {}", id);
+
+        BigDecimal depositAmount = validateDepositAmount(request);
+
+        return Single.fromPublisher(
+                        accountRepository.findByIdAndActiveTrue(id)
+                                .switchIfEmpty(Mono.error(new AccountNotFoundException(id)))
+                )
+                .map(account -> {
+                    BigDecimal currentBalance = defaultBigDecimal(account.getBalance());
+                    account.setBalance(currentBalance.add(depositAmount));
+                    return account;
+                })
+                .flatMap(account -> Single.fromPublisher(accountRepository.save(account)))
+                .map(accountMapper::toResponse)
+                .doOnSuccess(response ->
+                        log.info("Deposit registered successfully for account id: {}", id));
     }
 
     private Single<CustomerResponse> findCustomerOrFail(String customerId) {
@@ -214,5 +238,18 @@ public class AccountServiceImpl implements AccountService {
         } catch (IllegalArgumentException | NullPointerException exception) {
             throw new BusinessRuleException("Invalid account type: " + accountType);
         }
+    }
+
+    private BigDecimal validateDepositAmount(AccountDepositRequest request) {
+        BigDecimal amount = BigDecimal.valueOf(request.getAmount());
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessRuleException("Deposit amount must be greater than zero");
+        }
+        return amount;
+    }
+
+    private BigDecimal defaultBigDecimal(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }
