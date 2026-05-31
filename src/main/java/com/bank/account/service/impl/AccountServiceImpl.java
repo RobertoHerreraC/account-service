@@ -3,6 +3,7 @@ package com.bank.account.service.impl;
 import com.bank.account.api.dto.AccountDepositRequest;
 import com.bank.account.api.dto.AccountRequest;
 import com.bank.account.api.dto.AccountResponse;
+import com.bank.account.api.dto.AccountWithdrawalRequest;
 import com.bank.account.client.CustomerClient;
 import com.bank.account.client.dto.CustomerResponse;
 import com.bank.account.domain.Account;
@@ -133,6 +134,22 @@ public class AccountServiceImpl implements AccountService {
                         log.info("Deposit registered successfully for account id: {}", id));
     }
 
+    @Override
+    public Single<AccountResponse> withdraw(String id, AccountWithdrawalRequest request) {
+        log.info("Withdrawing money from account with id: {}", id);
+
+        BigDecimal withdrawalAmount = validateWithdrawalAmount(request);
+        return Single.fromPublisher(
+                        accountRepository.findByIdAndActiveTrue(id)
+                                .switchIfEmpty(Mono.error(new AccountNotFoundException(id)))
+                )
+                .map(account -> applyWithdrawal(account, withdrawalAmount))
+                .flatMap(account -> Single.fromPublisher(accountRepository.save(account)))
+                .map(accountMapper::toResponse)
+                .doOnSuccess(response ->
+                        log.info("Withdrawal registered successfully for account id: {}", id));
+    }
+
     private Single<CustomerResponse> findCustomerOrFail(String customerId) {
         return Single.fromPublisher(
                 customerClient.findCustomerById(customerId)
@@ -251,5 +268,25 @@ public class AccountServiceImpl implements AccountService {
 
     private BigDecimal defaultBigDecimal(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private BigDecimal validateWithdrawalAmount(AccountWithdrawalRequest request) {
+        BigDecimal amount = BigDecimal.valueOf(request.getAmount());
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessRuleException("Withdrawal amount must be greater than zero");
+        }
+        return amount;
+    }
+
+    private Account applyWithdrawal(Account account, BigDecimal withdrawalAmount) {
+        BigDecimal currentBalance = defaultBigDecimal(account.getBalance());
+
+        if (withdrawalAmount.compareTo(currentBalance) > 0) {
+            throw new BusinessRuleException("Insufficient balance for withdrawal");
+        }
+
+        account.setBalance(currentBalance.subtract(withdrawalAmount));
+        return account;
     }
 }
