@@ -1,8 +1,10 @@
 package com.bank.account.service.impl;
 
 import com.bank.account.api.dto.*;
-import com.bank.account.client.CustomerClient;
-import com.bank.account.client.dto.CustomerResponse;
+import com.bank.account.client.customer.CustomerClient;
+import com.bank.account.client.customer.dto.CustomerResponse;
+import com.bank.account.client.movement.MovementClient;
+import com.bank.account.client.movement.dto.MovementRequest;
 import com.bank.account.domain.Account;
 import com.bank.account.domain.AccountType;
 import com.bank.account.exception.AccountNotFoundException;
@@ -32,6 +34,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final CustomerClient customerClient;
+    private final MovementClient movementClient;
 
     @Override
     public Single<AccountResponse> create(AccountRequest request) {
@@ -125,7 +128,14 @@ public class AccountServiceImpl implements AccountService {
                     account.setBalance(currentBalance.add(depositAmount));
                     return account;
                 })
-                .flatMap(account -> Single.fromPublisher(accountRepository.save(account)))
+                .flatMap(account ->
+                        Single.fromPublisher(accountRepository.save(account))
+                )
+                .flatMap(savedAccount ->
+                        Single.fromPublisher(registerDepositMovement(savedAccount, depositAmount)
+                                        .thenReturn(savedAccount)
+                        )
+                )
                 .map(accountMapper::toResponse)
                 .doOnSuccess(response ->
                         log.info("Deposit registered successfully for account id: {}", id));
@@ -312,5 +322,17 @@ public class AccountServiceImpl implements AccountService {
 
         account.setBalance(currentBalance.subtract(withdrawalAmount));
         return account;
+    }
+
+    private Mono<Void> registerDepositMovement(Account account, BigDecimal depositAmount) {
+        MovementRequest movementRequest = MovementRequest.builder()
+                .customerId(account.getCustomerId())
+                .productId(account.getId())
+                .productType("BANK_ACCOUNT")
+                .movementType("DEPOSIT")
+                .amount(depositAmount.doubleValue())
+                .description("Bank account deposit")
+                .build();
+        return movementClient.createMovement(movementRequest);
     }
 }

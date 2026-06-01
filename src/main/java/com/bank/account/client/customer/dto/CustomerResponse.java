@@ -1,4 +1,4 @@
-package com.bank.account.client.dto;
+package com.bank.account.client.customer.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

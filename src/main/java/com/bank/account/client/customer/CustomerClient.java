@@ -1,6 +1,6 @@
-package com.bank.account.client;
+package com.bank.account.client.customer;
 
-import com.bank.account.client.dto.CustomerResponse;
+import com.bank.account.client.customer.dto.CustomerResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
