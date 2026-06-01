@@ -151,7 +151,15 @@ public class AccountServiceImpl implements AccountService {
                                 .switchIfEmpty(Mono.error(new AccountNotFoundException(id)))
                 )
                 .map(account -> applyWithdrawal(account, withdrawalAmount))
-                .flatMap(account -> Single.fromPublisher(accountRepository.save(account)))
+                .flatMap(account ->
+                        Single.fromPublisher(accountRepository.save(account))
+                )
+                .flatMap(savedAccount ->
+                        Single.fromPublisher(
+                                registerWithdrawalMovement(savedAccount, withdrawalAmount)
+                                        .thenReturn(savedAccount)
+                        )
+                )
                 .map(accountMapper::toResponse)
                 .doOnSuccess(response ->
                         log.info("Withdrawal registered successfully for account id: {}", id));
@@ -333,6 +341,22 @@ public class AccountServiceImpl implements AccountService {
                 .amount(depositAmount.doubleValue())
                 .description("Bank account deposit")
                 .build();
+        return movementClient.createMovement(movementRequest);
+    }
+
+    private Mono<Void> registerWithdrawalMovement(
+            Account account,
+            BigDecimal withdrawalAmount) {
+
+        MovementRequest movementRequest = MovementRequest.builder()
+                .customerId(account.getCustomerId())
+                .productId(account.getId())
+                .productType("BANK_ACCOUNT")
+                .movementType("WITHDRAWAL")
+                .amount(withdrawalAmount.doubleValue())
+                .description("Bank account withdrawal")
+                .build();
+
         return movementClient.createMovement(movementRequest);
     }
 }
