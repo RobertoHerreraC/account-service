@@ -18,24 +18,18 @@ public class Account {
 
     @Id
     private String id;
-
     private String customerId;
-
     private String accountNumber;
-
     private AccountType accountType;
-
     private BigDecimal balance;
-
+    private BigDecimal openingAmount;
+    private BigDecimal minimumDailyAverageAmount;
+    private Integer freeTransactionLimit;
+    private BigDecimal transactionCommission;
     private BigDecimal maintenanceFee;
-
     private Integer monthlyMovementLimit;
-
     private Integer allowedMovementDay;
-
     private List<String> holders;
-
     private List<String> authorizedSigners;
-
     private Boolean active;
 }

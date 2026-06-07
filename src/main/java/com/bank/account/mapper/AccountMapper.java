@@ -21,6 +21,10 @@ public class AccountMapper {
                 .accountNumber(generateAccountNumber())
                 .accountType(AccountType.valueOf(request.getAccountType()))
                 .balance(BigDecimal.ZERO)
+                .openingAmount(toBigDecimal(request.getOpeningAmount()))
+                .minimumDailyAverageAmount(toBigDecimal(request.getMinimumDailyAverageAmount()))
+                .freeTransactionLimit(defaultInteger(request.getFreeTransactionLimit()))
+                .transactionCommission(toBigDecimal(request.getTransactionCommission()))
                 .maintenanceFee(toBigDecimal(request.getMaintenanceFee()))
                 .monthlyMovementLimit(request.getMonthlyMovementLimit())
                 .allowedMovementDay(request.getAllowedMovementDay())
@@ -37,6 +41,10 @@ public class AccountMapper {
         response.setAccountNumber(account.getAccountNumber());
         response.setAccountType(account.getAccountType().name());
         response.setBalance(account.getBalance().doubleValue());
+        response.setOpeningAmount(account.getOpeningAmount().doubleValue());
+        response.setMinimumDailyAverageAmount(account.getMinimumDailyAverageAmount().doubleValue());
+        response.setFreeTransactionLimit(account.getFreeTransactionLimit());
+        response.setTransactionCommission(account.getTransactionCommission().doubleValue());
         response.setMaintenanceFee(account.getMaintenanceFee().doubleValue());
         response.setMonthlyMovementLimit(account.getMonthlyMovementLimit());
         response.setAllowedMovementDay(account.getAllowedMovementDay());
@@ -49,6 +57,10 @@ public class AccountMapper {
     public Account updateEntity(Account account, AccountRequest request) {
         account.setCustomerId(request.getCustomerId());
         account.setAccountType(AccountType.valueOf(request.getAccountType()));
+        account.setOpeningAmount(toBigDecimal(request.getOpeningAmount()));
+        account.setMinimumDailyAverageAmount(toBigDecimal(request.getMinimumDailyAverageAmount()));
+        account.setFreeTransactionLimit(defaultInteger(request.getFreeTransactionLimit()));
+        account.setTransactionCommission(toBigDecimal(request.getTransactionCommission()));
         account.setMaintenanceFee(toBigDecimal(request.getMaintenanceFee()));
         account.setMonthlyMovementLimit(request.getMonthlyMovementLimit());
         account.setAllowedMovementDay(request.getAllowedMovementDay());
@@ -77,5 +89,9 @@ public class AccountMapper {
 
     private String generateAccountNumber() {
         return "ACC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private Integer defaultInteger(Integer value) {
+        return value == null ? 0 : value;
     }
 }

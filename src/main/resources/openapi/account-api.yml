@@ -305,9 +305,34 @@ components:
           type: string
           example: "SAVINGS"
           description: "Allowed values: SAVINGS, CHECKING, FIXED_TERM"
+        openingAmount:
+          type: number
+          format: double
+          minimum: 0
+          example: 100.00
+          description: Initial amount used to open the bank account. It can be zero.
+        minimumDailyAverageAmount:
+          type: number
+          format: double
+          minimum: 0
+          example: 500.00
+          description: Required minimum daily average amount for VIP savings accounts.
+        freeTransactionLimit:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 10
+          description: Maximum number of free deposits and withdrawals allowed.
+        transactionCommission:
+          type: number
+          format: double
+          minimum: 0
+          example: 5.00
+          description: Commission charged after exceeding the free transaction limit.
         maintenanceFee:
           type: number
           format: double
+          minimum: 0
           example: 0.00
         monthlyMovementLimit:
           type: integer
@@ -347,6 +372,22 @@ components:
           type: number
           format: double
           example: 1000.00
+        openingAmount:
+          type: number
+          format: double
+          example: 100.00
+        minimumDailyAverageAmount:
+          type: number
+          format: double
+          example: 500.00
+        freeTransactionLimit:
+          type: integer
+          format: int32
+          example: 10
+        transactionCommission:
+          type: number
+          format: double
+          example: 5.00
         maintenanceFee:
           type: number
           format: double
